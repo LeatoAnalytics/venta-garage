@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Venta Garage{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="{{ url_for('index') }}" class="logo">Venta Garage</a>
+            <nav>
+                <ul class="categories">
+                    <li><a href="{{ url_for('index') }}" class="{% if not current_category %}active{% endif %}">Todos</a></li>
+                    {% for category in active_categories %}
+                    <li><a href="{{ url_for('category_view', category=category) }}" class="{% if current_category == category %}active{% endif %}">{{ category }}</a></li>
+                    {% endfor %}
+                    <li><a href="{{ url_for('category_view', category='Otros') }}" class="{% if current_category == 'Otros' %}active{% endif %}">Otros</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Creado con 🤖 por Leato Analytics - Proyecto Monos a Valencia 🇪🇸</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

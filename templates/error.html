@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Error - Venta Garage{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <h1>Error de conexión</h1>
+    <p>{{ error_message }}</p>
+    <p>Por favor, verifica la configuración de Airtable e intenta nuevamente.</p>
+    <ul class="troubleshooting-tips">
+        <li>Revisa la API Key de Airtable</li>
+        <li>Confirma que el ID de la Base sea correcto</li>
+        <li>Verifica que el nombre de la tabla sea exactamente 'Table 1'</li>
+        <li>Comprueba que la API Key tenga permisos para acceder a esta tabla</li>
+    </ul>
+    <a href="{{ url_for('index') }}" class="btn-primary">Intentar nuevamente</a>
+</div>
+{% endblock %} 

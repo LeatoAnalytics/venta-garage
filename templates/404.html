@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Página no encontrada - Venta Garage{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <h1>404</h1>
+    <h2>Página no encontrada</h2>
+    <p>Lo sentimos, la página que estás buscando no existe o ha sido eliminada.</p>
+    <a href="{{ url_for('index') }}" class="btn-primary">Volver a la página principal</a>
+</div>
+{% endblock %} 

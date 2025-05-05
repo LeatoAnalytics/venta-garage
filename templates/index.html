@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Venta Garage - Artículos en venta{% endblock %}
+
+{% block content %}
+<section class="products-grid">
+    <h1 class="section-title">
+        {% if current_category %}
+            Artículos en categoría: {{ current_category }}
+        {% else %}
+            Todos los artículos
+        {% endif %}
+    </h1>
+    
+    {% if products %}
+        <div class="products">
+            {% for product in products %}
+            <div class="product-card {% if product.fields.get('status') == 'Vendido' %}sold{% endif %}">
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-link">
+                    <div class="product-image">
+                        {% if product.fields.get('imagenes_s3') %}
+                            <img src="{{ product.fields.get('imagenes_s3') }}" alt="{{ product.fields.get('nombre_producto', 'Producto') }}">
+                        {% else %}
+                            <div class="no-image">Sin imagen</div>
+                        {% endif %}
+                        
+                        {% if product.fields.get('status') == 'Disponible' %}
+                            <div class="product-status available">Disponible</div>
+                        {% elif product.fields.get('status') == 'Reservado' %}
+                            <div class="product-status reserved">Reservado</div>
+                        {% elif product.fields.get('status') == 'Vendido' %}
+                            <div class="product-status sold">Vendido</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="product-info">
+                        <h3 class="product-title">{{ product.fields.get('nombre_producto', 'Producto sin nombre') }}</h3>
+                        
+                        <div class="product-price">
+                            {% if product.fields.get('precio_rebajado') %}
+                                <span class="price-original">{{ product.fields.get('precio_original', '0')|format_price }}</span>
+                                <span class="price-discounted">{{ product.fields.get('precio_rebajado')|format_price }}</span>
+                            {% else %}
+                                <span class="price-normal">{{ product.fields.get('precio_original', '0')|format_price }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <span class="product-category">{{ product.fields.get('categoria', 'Sin categoría') }}</span>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-products">
+            <p>No hay productos disponibles en esta categoría</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %} 
