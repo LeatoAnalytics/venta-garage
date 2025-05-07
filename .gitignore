@@ -22,13 +22,28 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Virtual Environment
 venv/
-ENV/
 
-# IDE files
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
+.terraformrc
+terraform.rc
+*.tfplan
+
+# AWS
+deployment_info.env
+
+# OS specific
+.DS_Store
 .idea/
 .vscode/
+
+# Logs
+*.log
+
+# IDE files
 *.swp
 *.swo 

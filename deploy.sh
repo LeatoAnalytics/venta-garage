@@ -82,9 +82,9 @@ build_and_push_image() {
     echo -e "${YELLOW}Iniciando sesión en ECR...${NC}"
     aws ecr get-login-password --region $(aws configure get region) | docker login --username AWS --password-stdin $ECR_REGISTRY
     
-    # Construir imagen
-    echo -e "${YELLOW}Construyendo imagen Docker...${NC}"
-    docker build -t venta-garage .
+    # Construir imagen especificando la plataforma amd64 (compatible con ECS)
+    echo -e "${YELLOW}Construyendo imagen Docker para plataforma linux/amd64...${NC}"
+    docker buildx build --platform linux/amd64 -t venta-garage --load .
     
     # Etiquetar imagen
     echo -e "${YELLOW}Etiquetando imagen...${NC}"

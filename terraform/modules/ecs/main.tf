@@ -65,33 +65,37 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Política para acceso a S3
-resource "aws_iam_policy" "s3_access_policy" {
-  name        = "${var.project_name}-s3-access-policy"
-  description = "Policy for accessing S3 bucket"
-  
+# Política específica de ECR para el rol de ejecución
+resource "aws_iam_role_policy" "ecr_access_policy" {
+  name = "ecr-access-policy"
+  role = aws_iam_role.ecs_execution_role.id
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Action = [
-          "s3:GetObject",
-          "s3:ListBucket"
-        ]
         Effect = "Allow"
-        Resource = [
-          "arn:aws:s3:::${var.s3_bucket_name}",
-          "arn:aws:s3:::${var.s3_bucket_name}/*"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
         ]
+        Resource = "*"
       }
     ]
   })
 }
 
+# Referencia a la política S3 existente en lugar de crear una nueva
+data "aws_iam_policy" "s3_access_policy" {
+  arn = "arn:aws:iam::730335181087:policy/venta-garage-s3-access-policy"
+}
+
 # Adjuntar política de S3 al rol de tarea
 resource "aws_iam_role_policy_attachment" "s3_access_attachment" {
   role       = aws_iam_role.ecs_task_role.name
-  policy_arn = aws_iam_policy.s3_access_policy.arn
+  policy_arn = data.aws_iam_policy.s3_access_policy.arn
 }
 
 # Definición de tarea ECS
