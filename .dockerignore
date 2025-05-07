@@ -1,0 +1,66 @@
+# Git
+.git
+.gitignore
+
+# Terraform
+terraform/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraformrc
+terraform.rc
+
+# Archivos temporales
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Entornos virtuales
+venv/
+ENV/
+env/
+.env
+
+# Archivos de editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Archivos generados por el despliegue
+deployment_info.env
+.terraform.lock.hcl
+
+# Archivos de Docker
+*.dockerfile
+docker-compose.yml
+docker-compose.override.yml
+
+# Otros
+README.md
+LICENSE
+apprunner.yaml
+.aws/
+deploy.sh 

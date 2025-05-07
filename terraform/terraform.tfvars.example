@@ -1,0 +1,14 @@
+aws_region       = "us-east-1"
+project_name     = "venta-garage"
+environment      = "prod"
+vpc_cidr         = "10.0.0.0/16"
+container_port   = 8080
+container_cpu    = 256
+container_memory = 512
+
+# Variables sensibles - reemplazar estos valores
+airtable_api_key        = "your_airtable_api_key"
+airtable_base_id        = "your_airtable_base_id"
+aws_access_key_id       = "your_aws_access_key_id"
+aws_secret_access_key   = "your_aws_secret_access_key"
+s3_bucket_name          = "venta-garage" 

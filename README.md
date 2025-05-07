@@ -78,13 +78,44 @@ S3_REGION=tu_region
 flask run
 ```
 
-### Despliegue en AWS (futuro)
+### Despliegue en AWS (con contenedores)
 
-La estructura de la aplicación está diseñada para ser compatible con varios servicios de AWS:
-- Amazon EC2
-- AWS Elastic Beanstalk
-- AWS Fargate
-- AWS Lambda (con adaptaciones adicionales)
+La aplicación está preparada para desplegarse en AWS utilizando contenedores Docker y ECS (Elastic Container Service):
+
+#### Prerrequisitos para despliegue en AWS
+
+- Cuenta de AWS con permisos adecuados
+- [AWS CLI](https://aws.amazon.com/cli/) configurado con credenciales 
+- [Terraform](https://www.terraform.io/downloads.html) (v1.0.0 o superior)
+- [Docker](https://www.docker.com/get-started) para construcción de imágenes
+
+#### Despliegue con script asistente
+
+Se incluye un script para facilitar el despliegue:
+
+```bash
+./deploy.sh
+```
+
+El script ofrece opciones para:
+1. Desplegar solo infraestructura
+2. Construir y subir imagen Docker
+3. Realizar ambas acciones
+4. Destruir infraestructura
+
+#### Despliegue manual
+
+Para un despliegue manual, consulta la documentación en el directorio `terraform/`.
+
+#### Arquitectura en AWS
+
+La infraestructura en AWS incluye:
+- VPC con subnets en múltiples zonas de disponibilidad
+- Elastic Container Registry (ECR) para almacenar la imagen Docker
+- ECS Fargate para ejecutar la aplicación sin administrar servidores
+- Application Load Balancer para distribuir el tráfico
+- Roles IAM para acceso a servicios necesarios
+- CloudWatch para logs y monitoreo
 
 ## Posibles Mejoras Futuras
 
