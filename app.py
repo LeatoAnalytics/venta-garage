@@ -58,18 +58,25 @@ def inject_now():
         'active_categories': get_active_categories()
     }
 
+def is_product_active(product):
+    """Checks if a product is active based on the 'activo' field"""
+    # Product is active if the 'activo' field exists and equals 'SI'
+    return product.get('fields', {}).get('activo') == 'SI'
+
 def get_active_categories():
     """Get unique categories from products in Airtable"""
     try:
         # Get all products from Airtable
         products = productos_table.all()
         
-        # Extract unique categories
+        # Extract unique categories from active products only
         categories = set()
         for product in products:
-            category = product.get('fields', {}).get('categoria')
-            if category:
-                categories.add(category)
+            # Only consider categories from active products
+            if is_product_active(product):
+                category = product.get('fields', {}).get('categoria')
+                if category:
+                    categories.add(category)
         
         # Sort categories alphabetically
         return sorted(list(categories))
@@ -179,10 +186,13 @@ def index():
         # Imprimir la estructura para debugging
         print(f"Estructura de datos Airtable: {json.dumps(products[:1], indent=2)}")
         
-        # Procesar campos para cada producto
-        processed_products = [process_airtable_fields(p) for p in products]
+        # Filter active products only
+        active_products = [p for p in products if is_product_active(p)]
         
-        # No longer filter out sold products, show all products
+        # Procesar campos para cada producto
+        processed_products = [process_airtable_fields(p) for p in active_products]
+        
+        # No longer filter out sold products, show all active products
         return render_template('index.html', products=processed_products)
     except Exception as e:
         print(f"Error fetching products: {e}")
@@ -197,7 +207,8 @@ def product_detail(product_id):
         # Get product from Airtable by ID
         product = productos_table.get(product_id)
         
-        if not product:
+        if not product or not is_product_active(product):
+            # Return 404 if product doesn't exist or is not active
             return render_template('404.html'), 404
         
         # Procesar campos del producto
@@ -215,8 +226,11 @@ def category_view(category):
         # Get all products
         all_products = productos_table.all()
         
-        # Process all products
-        processed_products = [process_airtable_fields(p) for p in all_products]
+        # Filter active products only
+        active_products = [p for p in all_products if is_product_active(p)]
+        
+        # Process all active products
+        processed_products = [process_airtable_fields(p) for p in active_products]
         
         if category == 'Otros':
             # For "Otros" category, get products without a category or with an empty category
