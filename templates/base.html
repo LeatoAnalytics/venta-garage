@@ -18,7 +18,7 @@
                     {% for category in active_categories %}
                     <li><a href="{{ url_for('category_view', category=category) }}" class="{% if current_category == category %}active{% endif %}">{{ category }}</a></li>
                     {% endfor %}
-                    <li><a href="{{ url_for('category_view', category='Otros') }}" class="{% if current_category == 'Otros' %}active{% endif %}">Otros</a></li>
+                    <li><a href="{{ url_for('category_view', category='Ofertas') }}" class="{% if current_category == 'Ofertas' %}active{% endif %}">Ofertas</a></li>
                 </ul>
             </nav>
         </div>

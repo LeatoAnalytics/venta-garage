@@ -232,11 +232,9 @@ def category_view(category):
         # Process all active products
         processed_products = [process_airtable_fields(p) for p in active_products]
         
-        if category == 'Otros':
-            # For "Otros" category, get products without a category or with an empty category
-            active_categories = get_active_categories()
-            products = [p for p in processed_products if not p['fields'].get('categoria') or 
-                        p['fields'].get('categoria', '') not in active_categories]
+        if category == 'Ofertas':
+            # For "Ofertas" category, get products with rebajado price
+            products = [p for p in processed_products if p['fields'].get('precio_rebajado')]
         else:
             # For regular categories, filter by the specific category
             products = [p for p in processed_products if p['fields'].get('categoria', '') == category]
