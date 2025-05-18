@@ -66,6 +66,8 @@
                     <span class="button-text">Copiar enlace</span>
                 </button>
                 <div id="copy-confirmation" class="copy-confirmation">¡Enlace copiado!</div>
+                <!-- Hidden input for fallback copy method -->
+                <input type="text" id="copy-url-input" value="{{ request.url }}" style="position: absolute; left: -9999px;">
             </div>
         {% endif %}
     </div>
@@ -81,13 +83,44 @@
     document.addEventListener('DOMContentLoaded', function() {
         const copyButton = document.getElementById('copy-link-button');
         const copyConfirmation = document.getElementById('copy-confirmation');
+        const copyUrlInput = document.getElementById('copy-url-input');
         
         if (copyButton) {
             copyButton.addEventListener('click', function() {
                 const productUrl = this.getAttribute('data-product-url');
                 
-                // Copy to clipboard
-                navigator.clipboard.writeText(productUrl).then(function() {
+                // Try modern Clipboard API first
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(productUrl)
+                        .then(showCopyConfirmation)
+                        .catch(function(err) {
+                            console.warn('Clipboard API failed, trying fallback method', err);
+                            fallbackCopyMethod();
+                        });
+                } else {
+                    // Fallback for browsers without Clipboard API support
+                    fallbackCopyMethod();
+                }
+                
+                function fallbackCopyMethod() {
+                    // Select the hidden input
+                    copyUrlInput.select();
+                    copyUrlInput.setSelectionRange(0, 99999); // For mobile devices
+                    
+                    try {
+                        // Execute copy command
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            showCopyConfirmation();
+                        } else {
+                            console.error('Fallback copy method failed');
+                        }
+                    } catch (err) {
+                        console.error('Error en el método alternativo de copia: ', err);
+                    }
+                }
+                
+                function showCopyConfirmation() {
                     // Show confirmation
                     copyConfirmation.style.opacity = '1';
                     
@@ -95,9 +128,7 @@
                     setTimeout(function() {
                         copyConfirmation.style.opacity = '0';
                     }, 2000);
-                }).catch(function(err) {
-                    console.error('Error al copiar: ', err);
-                });
+                }
             });
         }
     });
