@@ -7,6 +7,7 @@ WORKDIR /app
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
     gcc \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar archivos de dependencias
@@ -22,8 +23,8 @@ RUN useradd --create-home --shell /bin/bash app
 COPY . .
 
 # Copiar script de inicio
-COPY start.sh .
-RUN chmod +x start.sh
+COPY start_production.sh .
+RUN chmod +x start_production.sh
 
 # Crear directorio para logs
 RUN mkdir -p /app/logs && chown -R app:app /app
@@ -39,4 +40,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5001/ || exit 1
 
 # Comando por defecto
-CMD ["./start.sh"] 
+CMD ["./start_production.sh"] 
