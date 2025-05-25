@@ -72,8 +72,9 @@ def format_price(value):
     try:
         # Convertir a float si es string
         if isinstance(value, str):
-            value = float(value.replace(',', ''))
-        return f"${value:,.0f}"
+            value = float(value.replace(',', '').replace('.', ''))
+        # Formatear con puntos como separadores de miles (formato español)
+        return f"${value:,.0f}".replace(',', '.')
     except (ValueError, TypeError):
         return "N/A"
 
@@ -91,7 +92,7 @@ def inject_now():
     """Inyectar función datetime.now en templates"""
     return {
         'now': datetime.now(),
-        'categories': get_cached_categories()
+        'active_categories': get_cached_categories()
     }
 
 def is_product_active(product):
