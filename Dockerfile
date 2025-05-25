@@ -39,5 +39,9 @@ EXPOSE 5001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5001/ || exit 1
 
+# Variables de entorno por defecto (sin credenciales)
+ENV FLASK_ENV=production
+ENV PORT=5001
+
 # Comando por defecto
 CMD ["./start_simple.sh"] 

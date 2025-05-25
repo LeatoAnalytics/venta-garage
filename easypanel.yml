@@ -13,6 +13,19 @@ env:
     value: us-east-1
   - name: SECRET_ARN
     value: arn:aws:secretsmanager:us-east-1:730335181087:secret:venta-garage-secrets-yO4WWw
+  # Variables requeridas por la aplicación (valores se configuran en EasyPanel UI)
+  - name: SUPABASE_URL
+    value: https://zeyxeqeyzitpbzfgtehp.supabase.co
+  - name: SUPABASE_ANON_KEY
+    value: # Configurar en EasyPanel UI
+  - name: SUPABASE_SERVICE_KEY
+    value: # Configurar en EasyPanel UI
+  - name: AWS_ACCESS_KEY_ID
+    value: # Configurar en EasyPanel UI
+  - name: AWS_SECRET_ACCESS_KEY
+    value: # Configurar en EasyPanel UI
+  - name: S3_BUCKET_NAME
+    value: venta-garage
 
 # Configuración del servicio
 service:
