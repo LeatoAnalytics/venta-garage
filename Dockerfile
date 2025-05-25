@@ -23,8 +23,8 @@ RUN useradd --create-home --shell /bin/bash app
 COPY . .
 
 # Copiar script de inicio
-COPY start_debug.sh .
-RUN chmod +x start_debug.sh
+COPY start_simple.sh .
+RUN chmod +x start_simple.sh
 
 # Crear directorio para logs
 RUN mkdir -p /app/logs && chown -R app:app /app
@@ -40,4 +40,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5001/ || exit 1
 
 # Comando por defecto
-CMD ["./start_debug.sh"] 
+CMD ["./start_simple.sh"] 
