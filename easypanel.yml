@@ -1,0 +1,47 @@
+name: venta-garage
+image: venta-garage:latest
+
+# Variables de entorno requeridas
+env:
+  - name: FLASK_ENV
+    value: production
+  - name: PORT
+    value: "5001"
+  - name: WORKERS
+    value: "2"
+  - name: AWS_REGION
+    value: us-east-1
+  - name: SECRET_ARN
+    value: arn:aws:secretsmanager:us-east-1:730335181087:secret:venta-garage-secrets-yO4WWw
+
+# Configuración del servicio
+service:
+  type: web
+  port: 5001
+  healthcheck:
+    path: /
+    interval: 30s
+    timeout: 10s
+    retries: 3
+
+# Recursos
+resources:
+  memory: 512Mi
+  cpu: 0.5
+
+# Configuración de escalado
+scaling:
+  min: 1
+  max: 3
+  target_cpu: 70
+
+# Configuración de red
+network:
+  public: true
+  domain: # Configurar tu dominio aquí
+
+# Volúmenes (si necesitas persistencia)
+# volumes:
+#   - name: data
+#     path: /app/data
+#     size: 1Gi 

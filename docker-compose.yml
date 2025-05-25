@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  venta-garage:
+    build: .
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./.env:/app/.env:ro  # Montar archivo .env como solo lectura
+      - ./logs:/app/logs     # Montar directorio de logs
+      - ./static:/app/static:ro  # Solo para desarrollo
+      - ./templates:/app/templates:ro  # Solo para desarrollo
+    environment:
+      - FLASK_ENV=development
+      - PORT=5001
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  sync-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.sync
+    volumes:
+      - ./.env:/app/.env:ro  # Montar archivo .env como solo lectura
+      - ./logs:/app/logs     # Montar directorio de logs compartido
+    environment:
+      - SYNC_INTERVAL=15  # Sincronizar cada 15 minutos
+    restart: unless-stopped
+    depends_on:
+      - venta-garage 

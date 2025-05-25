@@ -2,6 +2,69 @@
 .git
 .gitignore
 
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+*.md
+LICENSE
+.env_restore
+cleanup_test_data.py
+test_secrets.py
+migrate_airtable_to_supabase.py
+sync_airtable_to_supabase.py
+setup_cron.sh
+database_setup.sql
+MIGRACION_SUPABASE.md
+env_example.txt
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
 # Terraform
 terraform/
 .terraform/
@@ -31,12 +94,6 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Entornos virtuales
-venv/
-ENV/
-env/
-.env
 
 # Archivos de editor
 .idea/

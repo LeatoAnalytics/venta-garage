@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Lambda function para sincronizar Airtable con Supabase cada 1 hora'
+
+Parameters:
+  FunctionName:
+    Type: String
+    Default: airtable_to_supabase_sync
+    Description: Nombre de la función Lambda
+
+Resources:
+  # Rol IAM para la función Lambda
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${FunctionName}-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:airtable-to-supabase-credentials-*"
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:CreateTable
+                  - dynamodb:DescribeTable
+                Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/venta-garage-sync-state"
+
+  # Tabla DynamoDB para guardar estado de sincronización
+  SyncStateTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: venta-garage-sync-state
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: sync_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: sync_id
+          KeyType: HASH
+      Tags:
+        - Key: Project
+          Value: VentaGarage
+        - Key: Purpose
+          Value: SyncState
+
+  # Función Lambda
+  SyncLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Runtime: python3.10
+      Handler: lambda_sync.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300  # 5 minutos
+      MemorySize: 256
+      Description: 'Sincroniza productos de Airtable a Supabase cada 1 hora'
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder - será actualizado por el script de despliegue'}
+      Environment:
+        Variables:
+          PYTHONPATH: /var/runtime
+      Tags:
+        - Key: Project
+          Value: VentaGarage
+        - Key: Purpose
+          Value: AirtableSupabaseSync
+
+  # EventBridge Rule para ejecutar cada 1 hora
+  HourlyScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "${FunctionName}-hourly-schedule"
+      Description: 'Ejecuta sincronización cada 1 hora'
+      ScheduleExpression: 'rate(1 hour)'  # Cada 1 hora
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt SyncLambdaFunction.Arn
+          Id: !Sub "${FunctionName}-target"
+
+  # Permiso para que EventBridge invoque la Lambda
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref SyncLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt HourlyScheduleRule.Arn
+
+  # CloudWatch Log Group para la función Lambda
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${FunctionName}"
+      RetentionInDays: 14
+
+Outputs:
+  LambdaFunctionName:
+    Description: 'Nombre de la función Lambda'
+    Value: !Ref SyncLambdaFunction
+    Export:
+      Name: !Sub "${AWS::StackName}-LambdaFunction"
+
+  LambdaFunctionArn:
+    Description: 'ARN de la función Lambda'
+    Value: !GetAtt SyncLambdaFunction.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-LambdaArn"
+
+  ScheduleRuleName:
+    Description: 'Nombre de la regla de EventBridge'
+    Value: !Ref HourlyScheduleRule
+    Export:
+      Name: !Sub "${AWS::StackName}-ScheduleRule"
+
+  DynamoDBTableName:
+    Description: 'Nombre de la tabla DynamoDB'
+    Value: !Ref SyncStateTable
+    Export:
+      Name: !Sub "${AWS::StackName}-DynamoTable"
+
+  NextExecution:
+    Description: 'Información de ejecución'
+    Value: 'La función se ejecutará cada 1 hora automáticamente' 

@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  venta-garage:
+    image: venta-garage:latest
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_ENV=production
+      - PORT=5001
+      - WORKERS=2
+      - AWS_REGION=us-east-1
+      - SECRET_ARN=arn:aws:secretsmanager:us-east-1:730335181087:secret:venta-garage-secrets-yO4WWw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3" 

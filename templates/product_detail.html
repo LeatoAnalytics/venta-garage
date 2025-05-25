@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ product.fields.get('nombre_producto', 'Detalle de producto') }} - Venta Garage{% endblock %}
+{% block title %}{{ product.get('nombre_producto', 'Detalle de producto') }} - Venta Garage{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/product-detail.css') }}">
@@ -9,16 +9,16 @@
 {% block content %}
 <div class="product-detail">
     <div class="product-images">
-        {% if product.fields.get('imagenes_s3') %}
+        {% if product.get('imagenes_s3') %}
             <div class="main-image">
-                <img id="main-product-image" src="{{ product.fields.get('imagenes_s3') }}" alt="{{ product.fields.get('nombre_producto', 'Producto') }}">
+                <img id="main-product-image" src="{{ product.get('imagenes_s3') }}" alt="{{ product.get('nombre_producto', 'Producto') }}">
             </div>
             
-            {% if product.fields.get('imagenes_s3_adicionales') %}
+            {% if product.get('imagenes_s3_adicionales') %}
                 <div class="thumbnail-images">
-                    {% for image_url in product.fields.get('imagenes_s3_adicionales') %}
+                    {% for image_url in product.get('imagenes_s3_adicionales') %}
                         <div class="thumbnail" onclick="changeMainImage('{{ image_url }}')">
-                            <img src="{{ image_url }}" alt="{{ product.fields.get('nombre_producto', 'Producto') }} - vista {{ loop.index }}">
+                            <img src="{{ image_url }}" alt="{{ product.get('nombre_producto', 'Producto') }} - vista {{ loop.index }}">
                         </div>
                     {% endfor %}
                 </div>
@@ -31,35 +31,35 @@
     </div>
 
     <div class="product-info-detail">
-        <h1 class="product-title">{{ product.fields.get('nombre_producto', 'Producto sin nombre') }}</h1>
+        <h1 class="product-title">{{ product.get('nombre_producto', 'Producto sin nombre') }}</h1>
         
         <div class="product-status-container">
-            {% if product.fields.get('status') == 'Disponible' %}
+            {% if product.get('status') == 'Disponible' %}
                 <span class="status available">Disponible</span>
-            {% elif product.fields.get('status') == 'Reservado' %}
+            {% elif product.get('status') == 'Reservado' %}
                 <span class="status reserved">Reservado</span>
-            {% elif product.fields.get('status') == 'Vendido' %}
+            {% elif product.get('status') == 'Vendido' %}
                 <span class="status sold">Vendido</span>
             {% endif %}
             
-            <span class="category-badge">{{ product.fields.get('categoria', 'Sin categoría') }}</span>
+            <span class="category-badge">{{ product.get('categoria', 'Sin categoría') }}</span>
         </div>
         
         <div class="price-container">
-            {% if product.fields.get('precio_rebajado') %}
-                <span class="price-original">{{ product.fields.get('precio_original', '0')|format_price }}</span>
-                <span class="price-discounted">{{ product.fields.get('precio_rebajado')|format_price }}</span>
+            {% if product.get('precio_rebajado') %}
+                <span class="price-original">{{ product.get('precio_original', '0')|format_price }}</span>
+                <span class="price-discounted">{{ product.get('precio_rebajado')|format_price }}</span>
             {% else %}
-                <span class="price-normal">{{ product.fields.get('precio_original', '0')|format_price }}</span>
+                <span class="price-normal">{{ product.get('precio_original', '0')|format_price }}</span>
             {% endif %}
         </div>
         
         <div class="description">
             <h3>Descripción</h3>
-            <p>{{ product.fields.get('descripcion', 'Sin descripción disponible.') }}</p>
+            <p>{{ product.get('descripcion', 'Sin descripción disponible.') }}</p>
         </div>
         
-        {% if product.fields.get('status') != 'Vendido' %}
+        {% if product.get('status') != 'Vendido' %}
             <div class="contact-container">
                 <button id="copy-link-button" class="copy-link-btn" data-product-url="{{ request.url }}">
                     <span class="button-icon">📋</span>

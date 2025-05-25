@@ -1,27 +1,42 @@
-FROM python:3.8-slim
+# Usar imagen base de Python 3.10 slim
+FROM python:3.10-slim
 
+# Establecer directorio de trabajo
 WORKDIR /app
 
 # Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar archivos de requisitos
+# Copiar archivos de dependencias
 COPY requirements.txt .
 
-# Instalar dependencias
+# Instalar dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código fuente
+# Crear usuario no-root para seguridad
+RUN useradd --create-home --shell /bin/bash app
+
+# Copiar código de la aplicación
 COPY . .
 
+# Copiar script de inicio
+COPY start.sh .
+RUN chmod +x start.sh
+
+# Crear directorio para logs
+RUN mkdir -p /app/logs && chown -R app:app /app
+
+# Cambiar a usuario no-root
+USER app
+
 # Exponer puerto
-EXPOSE 8080
+EXPOSE 5001
 
-# Configurar variables de entorno
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5001/ || exit 1
 
-# Ejecutar con gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"] 
+# Comando por defecto
+CMD ["./start.sh"] 

@@ -9,26 +9,43 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}=== Script de Despliegue para Venta Garage ===${NC}"
 
-# Verificar que AWS CLI está instalado
-if ! command -v aws &> /dev/null
-then
-    echo -e "${RED}AWS CLI no está instalado. Por favor, instálalo primero.${NC}"
-    exit 1
-fi
+# Variables por defecto
+IMAGE_NAME="venta-garage"
+TAG="latest"
+REGISTRY=${REGISTRY:-""}
 
-# Verificar que Terraform está instalado
-if ! command -v terraform &> /dev/null
-then
-    echo -e "${RED}Terraform no está instalado. Por favor, instálalo primero.${NC}"
-    exit 1
-fi
+# Función para mostrar ayuda
+show_help() {
+    echo "Uso: $0 [OPCIONES] [TAG]"
+    echo ""
+    echo "Opciones:"
+    echo "  -h, --help     Mostrar esta ayuda"
+    echo "  -b, --build    Solo construir la imagen"
+    echo "  -p, --push     Solo subir la imagen (requiere REGISTRY)"
+    echo "  -t, --test     Ejecutar tests locales"
+    echo ""
+    echo "Variables de entorno:"
+    echo "  REGISTRY       Registry de Docker (ej: your-registry.com/)"
+    echo ""
+    echo "Ejemplos:"
+    echo "  $0 --build           # Construir con tag 'latest'"
+    echo "  $0 --build v1.0.0    # Construir con tag 'v1.0.0'"
+    echo "  $0 --test            # Ejecutar tests"
+    echo "  REGISTRY=myregistry.com/ $0 --push  # Solo subir"
+}
 
-# Verificar que Docker está instalado
-if ! command -v docker &> /dev/null
-then
-    echo -e "${RED}Docker no está instalado. Por favor, instálalo primero.${NC}"
-    exit 1
-fi
+# Verificar que Docker está instalado y corriendo
+check_docker() {
+    if ! command -v docker &> /dev/null; then
+        echo -e "${RED}❌ Docker no está instalado${NC}"
+        exit 1
+    fi
+    
+    if ! docker info &> /dev/null; then
+        echo -e "${RED}❌ Docker no está corriendo. Inicia Docker Desktop primero.${NC}"
+        exit 1
+    fi
+}
 
 # Función para desplegar la infraestructura
 deploy_infrastructure() {
@@ -68,71 +85,164 @@ deploy_infrastructure() {
     cd ..
 }
 
-# Función para construir y subir la imagen Docker
-build_and_push_image() {
-    echo -e "${YELLOW}Construyendo y subiendo imagen Docker...${NC}"
+# Función para construir la imagen
+build_image() {
+    echo -e "${YELLOW}📦 Construyendo imagen Docker...${NC}"
     
-    # Cargar la información del despliegue
-    source deployment_info.env
+    # Verificar que los archivos necesarios existen
+    if [ ! -f "Dockerfile" ]; then
+        echo -e "${RED}❌ Error: Dockerfile no encontrado${NC}"
+        exit 1
+    fi
     
-    # Extraer registro base
-    ECR_REGISTRY=$(echo $REPO_URL | cut -d'/' -f1)
+    if [ ! -f "requirements.txt" ]; then
+        echo -e "${RED}❌ Error: requirements.txt no encontrado${NC}"
+        exit 1
+    fi
     
-    # Iniciar sesión en ECR
-    echo -e "${YELLOW}Iniciando sesión en ECR...${NC}"
-    aws ecr get-login-password --region $(aws configure get region) | docker login --username AWS --password-stdin $ECR_REGISTRY
+    # Construir la imagen
+    echo "Construyendo imagen: ${IMAGE_NAME}:${TAG}"
+    docker build -t ${IMAGE_NAME}:${TAG} .
     
-    # Construir imagen especificando la plataforma amd64 (compatible con ECS)
-    echo -e "${YELLOW}Construyendo imagen Docker para plataforma linux/amd64...${NC}"
-    docker buildx build --platform linux/amd64 -t venta-garage --load .
-    
-    # Etiquetar imagen
-    echo -e "${YELLOW}Etiquetando imagen...${NC}"
-    docker tag venta-garage:latest $REPO_URL:latest
-    
-    # Subir imagen
-    echo -e "${YELLOW}Subiendo imagen a ECR...${NC}"
-    docker push $REPO_URL:latest
-    
-    echo -e "${GREEN}Imagen Docker construida y subida correctamente.${NC}"
-    echo -e "La aplicación estará disponible en: ${APP_URL}"
-    echo -e "${YELLOW}Nota: Puede tomar unos minutos hasta que ECS implemente la nueva tarea.${NC}"
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ Imagen construida exitosamente: ${IMAGE_NAME}:${TAG}${NC}"
+    else
+        echo -e "${RED}❌ Error al construir la imagen${NC}"
+        exit 1
+    fi
 }
 
-# Función principal
-main() {
-    echo -e "${YELLOW}¿Qué acción deseas realizar?${NC}"
-    echo "1. Desplegar infraestructura"
-    echo "2. Construir y subir imagen Docker"
-    echo "3. Realizar ambas acciones"
-    echo "4. Destruir infraestructura"
-    read -p "Selecciona una opción (1-4): " choice
+# Función para subir la imagen
+push_image() {
+    if [ -z "$REGISTRY" ]; then
+        echo -e "${RED}❌ Error: REGISTRY no está configurado${NC}"
+        echo "Configura la variable REGISTRY con tu registry de Docker"
+        exit 1
+    fi
     
-    case $choice in
-        1)
-            deploy_infrastructure
+    echo -e "${YELLOW}📤 Subiendo imagen al registry...${NC}"
+    
+    # Etiquetar para el registry
+    docker tag ${IMAGE_NAME}:${TAG} ${REGISTRY}${IMAGE_NAME}:${TAG}
+    
+    # Subir la imagen
+    docker push ${REGISTRY}${IMAGE_NAME}:${TAG}
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ Imagen subida exitosamente: ${REGISTRY}${IMAGE_NAME}:${TAG}${NC}"
+    else
+        echo -e "${RED}❌ Error al subir la imagen${NC}"
+        exit 1
+    fi
+}
+
+# Función para ejecutar tests locales
+run_tests() {
+    echo -e "${YELLOW}🧪 Ejecutando tests locales...${NC}"
+    
+    # Verificar que la imagen existe
+    if ! docker image inspect ${IMAGE_NAME}:${TAG} > /dev/null 2>&1; then
+        echo -e "${RED}❌ Error: Imagen ${IMAGE_NAME}:${TAG} no encontrada${NC}"
+        echo "Ejecuta primero: $0 --build"
+        exit 1
+    fi
+    
+    # Ejecutar contenedor de prueba
+    echo "Iniciando contenedor de prueba..."
+    CONTAINER_ID=$(docker run -d -p 5002:5001 \
+        -e AWS_REGION=us-east-1 \
+        -e SECRET_ARN=arn:aws:secretsmanager:us-east-1:730335181087:secret:venta-garage-secrets-yO4WWw \
+        ${IMAGE_NAME}:${TAG})
+    
+    # Esperar a que el contenedor esté listo
+    echo "Esperando a que el servicio esté listo..."
+    sleep 15
+    
+    # Verificar que el servicio responde
+    echo "Verificando que el servicio responde..."
+    if curl -f http://localhost:5002/ > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ Test exitoso: El servicio responde correctamente${NC}"
+    else
+        echo -e "${RED}❌ Test fallido: El servicio no responde${NC}"
+        echo "Logs del contenedor:"
+        docker logs $CONTAINER_ID
+    fi
+    
+    # Limpiar
+    echo "Limpiando contenedor de prueba..."
+    docker stop $CONTAINER_ID > /dev/null 2>&1
+    docker rm $CONTAINER_ID > /dev/null 2>&1
+}
+
+# Procesar argumentos
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            exit 0
             ;;
-        2)
-            build_and_push_image
+        -b|--build)
+            ACTION="build"
+            shift
+            # Si hay un argumento siguiente que no empieza con -, es el tag
+            if [[ $# -gt 0 && ! $1 =~ ^- ]]; then
+                TAG="$1"
+                shift
+            fi
             ;;
-        3)
-            deploy_infrastructure
-            build_and_push_image
+        -p|--push)
+            ACTION="push"
+            shift
+            # Si hay un argumento siguiente que no empieza con -, es el tag
+            if [[ $# -gt 0 && ! $1 =~ ^- ]]; then
+                TAG="$1"
+                shift
+            fi
             ;;
-        4)
-            echo -e "${RED}ATENCIÓN: Esto eliminará TODOS los recursos creados.${NC}"
-            read -p "¿Estás seguro? (s/n): " confirm
-            if [[ $confirm == "s" || $confirm == "S" ]]; then
-                cd terraform && terraform destroy
-            else
-                echo "Operación cancelada."
+        -t|--test)
+            ACTION="test"
+            shift
+            # Si hay un argumento siguiente que no empieza con -, es el tag
+            if [[ $# -gt 0 && ! $1 =~ ^- ]]; then
+                TAG="$1"
+                shift
             fi
             ;;
         *)
-            echo -e "${RED}Opción no válida.${NC}"
+            # Si no es una opción, debe ser el tag
+            if [[ ! $1 =~ ^- ]]; then
+                TAG="$1"
+            else
+                echo -e "${RED}❌ Opción desconocida: $1${NC}"
+                show_help
+                exit 1
+            fi
+            shift
             ;;
     esac
-}
+done
 
-# Ejecutar la función principal
-main 
+# Verificar Docker antes de cualquier operación
+check_docker
+
+# Ejecutar la acción correspondiente
+case "${ACTION:-default}" in
+    build)
+        build_image
+        ;;
+    push)
+        push_image
+        ;;
+    test)
+        run_tests
+        ;;
+    default)
+        echo -e "${YELLOW}⚠️  No se especificó una acción. Usa --help para ver las opciones disponibles.${NC}"
+        echo ""
+        echo "Acciones disponibles:"
+        echo "  ./deploy.sh --build    # Construir imagen"
+        echo "  ./deploy.sh --test     # Ejecutar tests"
+        echo "  ./deploy.sh --push     # Subir imagen (requiere REGISTRY)"
+        echo "  ./deploy.sh --help     # Mostrar ayuda"
+        ;;
+esac 
