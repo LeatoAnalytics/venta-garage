@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 import boto3
 from datetime import datetime, timedelta
-from functools import lru_cache
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # Cargar variables de entorno
@@ -78,14 +77,13 @@ def format_price(value):
     except (ValueError, TypeError):
         return "N/A"
 
-@lru_cache(maxsize=1)
 def get_cached_categories():
-    """Obtener categorías únicas de la base de datos (con cache)"""
+    """Obtener categorías únicas de la base de datos (dinámico)"""
     return get_active_categories()
 
 def refresh_category_cache():
-    """Refrescar cache de categorías"""
-    get_cached_categories.cache_clear()
+    """Refrescar cache de categorías (ya no necesario)"""
+    pass
 
 @app.context_processor
 def inject_now():
@@ -100,20 +98,22 @@ def is_product_active(product):
     return product.get('activo', False) and product.get('status') != 'Vendido'
 
 def get_active_categories():
-    """Obtener categorías de productos activos"""
+    """Obtener categorías de productos activos y no vendidos"""
     try:
-        response = supabase.table('productos').select('categoria').eq('activo', True).execute()
+        # Obtener productos activos que no estén vendidos
+        response = supabase.table('productos').select('categoria').eq('activo', True).neq('status', 'Vendido').execute()
         if response.data:
             categories = list(set([p['categoria'] for p in response.data if p.get('categoria')]))
-            # Agregar "Ofertas" si hay productos con precio rebajado
-            ofertas_response = supabase.table('productos').select('id').eq('activo', True).not_.is_('precio_rebajado', 'null').execute()
+            
+            # Agregar "Ofertas" solo si hay productos con precio rebajado que no estén vendidos
+            ofertas_response = supabase.table('productos').select('id').eq('activo', True).neq('status', 'Vendido').not_.is_('precio_rebajado', 'null').execute()
             if ofertas_response.data:
                 categories.append('Ofertas')
             return sorted(categories)
         return []
     except Exception as e:
         print(f"Error al obtener categorías: {e}")
-        return ['Auto', 'Deporte', 'Electro', 'Electrónicos', 'Hogar', 'Ropa', 'Varios']
+        return []
 
 def get_s3_images_from_folder(base_url):
     """Obtener imágenes de una carpeta S3 y generar URLs prefirmadas"""
@@ -316,7 +316,6 @@ def page_not_found(e):
 if not app.debug:
     scheduler = BackgroundScheduler()
     scheduler.add_job(func=clean_url_cache, trigger="interval", minutes=30)
-    scheduler.add_job(func=refresh_category_cache, trigger="interval", minutes=30)
     scheduler.start()
 
 if __name__ == '__main__':
