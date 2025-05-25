@@ -1,7 +1,11 @@
 #!/bin/bash
 
 echo "🔍 DEBUG: Iniciando aplicación..."
-echo "📅 Fecha: $(date)"
+echo "�� Fecha: $(date)"
+
+# Configurar puerto correcto
+export PORT=5001
+export FLASK_ENV=production
 
 # Mostrar todas las variables de entorno (sin valores sensibles)
 echo "🔧 Variables de entorno disponibles:"
@@ -24,6 +28,10 @@ python -c "import flask; print('✅ Flask OK')" || echo "❌ Flask falla"
 python -c "import supabase; print('✅ Supabase OK')" || echo "❌ Supabase falla"
 python -c "import boto3; print('✅ Boto3 OK')" || echo "❌ Boto3 falla"
 
-# Iniciar aplicación simple
-echo "🚀 Iniciando aplicación..."
-python app_supabase.py 
+# Iniciar aplicación con puerto correcto
+echo "🚀 Iniciando aplicación en puerto $PORT..."
+python -c "
+import os
+os.environ['PORT'] = '5001'
+exec(open('app_supabase.py').read())
+" 
