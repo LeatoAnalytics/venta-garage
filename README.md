@@ -1,130 +1,157 @@
-# Venta Garage - Plataforma Minimalista para Venta Personal
+# 🏪 Venta Garage - Aplicación Web
 
-Una aplicación web minimalista desarrollada en Python con Flask para listar y detallar artículos personales para venta antes de una mudanza al extranjero.
+Aplicación web para gestionar ventas de garage con una arquitectura moderna y simplificada.
 
-## Características
+## 🏗️ Arquitectura
 
-- Vista de todos los productos organizados por categorías
-- Página detallada para cada producto
-- Botón para copiar enlace del producto
-- Diseño responsivo y minimalista
-- Integración con Airtable para gestión de datos
-- Imágenes servidas desde Amazon S3
-
-## Tecnologías Utilizadas
-
-- **Backend**: Python, Flask
-- **Frontend**: HTML, CSS, JavaScript
-- **Gestión de Datos**: Airtable
-- **Almacenamiento de Imágenes**: Amazon S3
-
-## Estructura de Datos en Airtable
-
-**Tabla**: Productos
-- ID_Producto
-- NombreProducto
-- Descripcion
-- PrecioOriginal
-- PrecioRebajado
-- ImagenesURLs
-- Categoria
-- Estado
-
-## Configuración y Despliegue
-
-### Requisitos Previos
-
-- Python 3.8+
-- Cuenta de Airtable con API Key
-- Cuenta de AWS con S3 bucket configurado
-
-### Instalación Local
-
-1. Clonar el repositorio:
 ```
-git clone <url-del-repositorio>
-cd venta-garage
+Frontend (Flask + Bootstrap)
+    ↓
+Docker Container (LightSail + EasyPanel)
+    ↓
+Supabase (PostgreSQL + Auth + API)
+    ↓
+Amazon S3 (Almacenamiento de imágenes)
 ```
 
-2. Crear y activar un entorno virtual:
-```
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-```
+## ✨ Características
 
-3. Instalar dependencias:
-```
-pip install -r requirements.txt
-```
+- **🔐 Autenticación:** Sistema de login/registro con Supabase Auth
+- **📦 Gestión de Productos:** CRUD completo para productos
+- **🖼️ Subida de Imágenes:** Almacenamiento directo en Amazon S3
+- **📱 Responsive:** Interfaz adaptable a todos los dispositivos
+- **🚀 Deployment:** Automatizado con Docker y EasyPanel
+- **💾 Base de Datos:** PostgreSQL gestionado por Supabase
 
-4. Configurar variables de entorno:
-Crear un archivo `.env` en la raíz del proyecto con los siguientes valores:
-```
-FLASK_APP=app.py
-FLASK_ENV=development
-FLASK_DEBUG=1
+## 🚀 Deployment Rápido
 
-AIRTABLE_API_KEY=tu_api_key
-AIRTABLE_BASE_ID=tu_base_id
-
-AWS_ACCESS_KEY_ID=tu_aws_key
-AWS_SECRET_ACCESS_KEY=tu_aws_secret
-S3_BUCKET_NAME=tu_bucket
-S3_REGION=tu_region
-```
-
-5. Ejecutar la aplicación:
-```
-flask run
-```
-
-### Despliegue en AWS (con contenedores)
-
-La aplicación está preparada para desplegarse en AWS utilizando contenedores Docker y ECS (Elastic Container Service):
-
-#### Prerrequisitos para despliegue en AWS
-
-- Cuenta de AWS con permisos adecuados
-- [AWS CLI](https://aws.amazon.com/cli/) configurado con credenciales 
-- [Terraform](https://www.terraform.io/downloads.html) (v1.0.0 o superior)
-- [Docker](https://www.docker.com/get-started) para construcción de imágenes
-
-#### Despliegue con script asistente
-
-Se incluye un script para facilitar el despliegue:
+### Con EasyPanel (Recomendado)
 
 ```bash
-./deploy.sh
+# 1. Clonar el repositorio
+git clone <tu-repo>
+cd script
+
+# 2. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales
+
+# 3. Desplegar con EasyPanel
+./easypanel-deploy.sh
 ```
 
-El script ofrece opciones para:
-1. Desplegar solo infraestructura
-2. Construir y subir imagen Docker
-3. Realizar ambas acciones
-4. Destruir infraestructura
+### Con Docker Compose
 
-#### Despliegue manual
+```bash
+# Desarrollo
+docker-compose up
 
-Para un despliegue manual, consulta la documentación en el directorio `terraform/`.
+# Producción
+docker-compose -f docker-compose.prod.yml up -d
+```
 
-#### Arquitectura en AWS
+## ⚙️ Configuración
 
-La infraestructura en AWS incluye:
-- VPC con subnets en múltiples zonas de disponibilidad
-- Elastic Container Registry (ECR) para almacenar la imagen Docker
-- ECS Fargate para ejecutar la aplicación sin administrar servidores
-- Application Load Balancer para distribuir el tráfico
-- Roles IAM para acceso a servicios necesarios
-- CloudWatch para logs y monitoreo
+### Variables de Entorno Requeridas
 
-## Posibles Mejoras Futuras
+```bash
+# Supabase
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_SERVICE_KEY=tu-service-key
+SUPABASE_ANON_KEY=tu-anon-key
 
-- Sistema de administración para actualizar productos
-- Integración de pagos
-- Autenticación de usuarios
-- Optimización de caché para reducir llamadas a la API
-- Implementación PWA para experiencia móvil mejorada
+# AWS S3
+AWS_ACCESS_KEY_ID=tu-access-key
+AWS_SECRET_ACCESS_KEY=tu-secret-key
+AWS_S3_BUCKET=tu-bucket-name
+AWS_REGION=us-east-1
 
-## Licencia
+# Flask
+FLASK_SECRET_KEY=tu-secret-key-muy-seguro
+FLASK_ENV=production
+```
 
-Este proyecto es para uso personal. 
+### Base de Datos
+
+1. Crear proyecto en [Supabase](https://supabase.com)
+2. Ejecutar el esquema:
+
+```sql
+-- Ver database_setup.sql para el esquema completo
+```
+
+## 📦 Estructura del Proyecto
+
+```
+script/
+├── app_docker.py           # Aplicación Flask principal
+├── database_setup.sql      # Esquema de base de datos
+├── requirements.txt        # Dependencias Python
+├── Dockerfile             # Imagen Docker
+├── docker-compose.yml     # Desarrollo
+├── docker-compose.prod.yml # Producción
+├── easypanel-deploy.sh    # Script de deployment
+├── easypanel.yml          # Configuración EasyPanel
+├── templates/             # Plantillas HTML
+├── static/                # Archivos estáticos (CSS, JS)
+└── DOCKER_DEPLOYMENT.md   # Documentación de deployment
+```
+
+## 🛠️ Desarrollo Local
+
+```bash
+# 1. Crear entorno virtual
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# 2. Instalar dependencias
+pip install -r requirements.txt
+
+# 3. Configurar variables de entorno
+cp .env.example .env
+# Editar .env
+
+# 4. Ejecutar aplicación
+python app_docker.py
+```
+
+## 🌟 Beneficios de esta Arquitectura
+
+### ✅ **Simplificada**
+- Sin sincronización compleja entre sistemas
+- Un solo punto de verdad (Supabase)
+- Menos componentes = menos problemas
+
+### ✅ **Económica**
+- Supabase Free Tier: 50,000 MAU, 500MB DB, 5GB bandwidth
+- S3: Solo pagas por lo que usas
+- LightSail: Hosting predictible desde $5/mes
+
+### ✅ **Escalable**
+- Supabase escala automáticamente
+- S3 almacenamiento ilimitado
+- EasyPanel facilita el deployment
+
+### ✅ **Moderna**
+- API REST automática con Supabase
+- Autenticación robusta incluida
+- Real-time capabilities
+- Interfaz administrativa web
+
+## 🚀 Próximos Pasos
+
+1. **Configurar Supabase:** Crear proyecto y configurar esquema
+2. **Configurar S3:** Crear bucket y políticas
+3. **Deployment:** Usar EasyPanel para desplegar en LightSail
+4. **Personalizar:** Ajustar templates y estilos según necesidades
+
+## 📚 Documentación
+
+- [Supabase Docs](https://supabase.com/docs)
+- [EasyPanel Docs](https://easypanel.io/docs)
+- [Docker Deployment Guide](DOCKER_DEPLOYMENT.md)
+
+---
+
+**¡Tu venta garage nunca fue tan fácil de gestionar!** 🎉 
