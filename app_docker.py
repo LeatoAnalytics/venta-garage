@@ -105,11 +105,15 @@ def get_active_categories():
         if response.data:
             categories = list(set([p['categoria'] for p in response.data if p.get('categoria')]))
             
-            # Agregar "Ofertas" solo si hay productos con precio rebajado que no estén vendidos
+            # Ordenar las categorías alfabéticamente
+            sorted_categories = sorted(categories)
+            
+            # Agregar "Ofertas" al final solo si hay productos con precio rebajado que no estén vendidos
             ofertas_response = supabase.table('productos').select('id').eq('activo', True).neq('status', 'Vendido').not_.is_('precio_rebajado', 'null').execute()
             if ofertas_response.data:
-                categories.append('Ofertas')
-            return sorted(categories)
+                sorted_categories.append('Ofertas')
+            
+            return sorted_categories
         return []
     except Exception as e:
         print(f"Error al obtener categorías: {e}")
